@@ -4,41 +4,12 @@
 
 #include <string>
 #include <ctime>
-#include <sstream>
 #include <iostream>
 #include <cstdio>
 #include "my_time.h"
-std::string WeekString(int week_day) {
-    switch (week_day) {
-        case 0:
-            return "Mon";
-        case 1:
-            return "Tue";
-        case 2:
-            return "Wed";
-        case 3:
-            return "Thu";
-        case 4:
-            return "Fri";
-        case 5:
-            return "Sat";
-        case 6:
-            return "Sun";
-    }
-    return "Mon";
-}
-MyTime::MyTime(int month, int month_day, int hour, int minutes)
-    :month(month), month_day(month_day), hour(hour), minutes(minutes)
-    {}
-int GetTodayWeek() {
-    time_t timer;
-    time(&timer);
-    tm *tm_time;
-    tm_time = localtime(&timer);
-    return tm_time->tm_wday;
-}
 
-std::string MyTime::TimeString() const {
+
+std::string MyTime::timeString() const {
     char buffer[20];
     sprintf(buffer, "%02d-%02d,%02d:%02d",
              month, month_day, hour, minutes);
@@ -46,18 +17,20 @@ std::string MyTime::TimeString() const {
     return ret;
 }
 
-MyTime GetNowTime() {
+MyTime getNowTime() {
     time_t timer;
     time(&timer);
     tm *tm_time;
     tm_time = localtime(&timer);
-    return MyTime(tm_time->tm_mon+1,
-                  tm_time->tm_mday,
-                  tm_time->tm_hour,
-                  tm_time->tm_min);
+    MyTime ret;
+    ret.month = tm_time->tm_mon+1;
+    ret.month_day = tm_time->tm_mday;
+    ret.hour = tm_time->tm_hour;
+    ret.minutes = tm_time->tm_min;
+    return ret;
 }
 bool MyTime::isToday() const {
-    MyTime a= GetNowTime();
+    MyTime a= getNowTime();
     return a.month == month && a.month_day == month_day;
 }
 MyTime operator +(const MyTime& time, const int& day) {
@@ -92,7 +65,7 @@ int operator-(const MyTime& myTime1, const MyTime& myTime2) {
         return time2 - time1;
     }
 }
-void MyTime::changeTime() {
+void MyTime::Change() {
     int t_month;
     int t_month_day;
     int t_hour;
@@ -137,6 +110,10 @@ MyTime stringToTime(std::string time) {
     int hour;
     int minutes;
     sscanf(time.c_str(), "%d-%d,%d:%d", &month, &month_day, &hour, &minutes);
-    MyTime ret(month, month_day, hour, minutes);
+    MyTime ret;
+    ret.month = month;
+    ret.month_day = month_day;
+    ret.hour = hour;
+    ret.minutes = minutes;
     return ret;
 }

@@ -7,7 +7,6 @@
 class Record;
 bool start();
 void registrationMod();
-void change(Record *record);
 void search();
 void statistics();
 void change_or_delete();

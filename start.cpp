@@ -4,6 +4,7 @@
 #include "start.h"
 #include "record.h"
 #include <iostream>
+#include "condition.h"
 bool start() {
     std::cout << "please enter a c" << std::endl;
     std::string a;
@@ -83,22 +84,22 @@ void search() {
     }
     switch (choice) {
         case 1:
-            ret = recordList.SearchDepartment();
+            ret = recordList.searchDepartment();
             printRecordList(ret);
             delete ret;
             break;
         case 2:
-            ret = recordList.SearchDoctor();
+            ret = recordList.searchDoctor();
             printRecordList(ret);
             delete ret;
             break;
         case 3:
-            ret = recordList.SearchPatient();
+            ret = recordList.searchPatient();
             printRecordList(ret);
             delete ret;
             break;
         case 4:
-            ret = recordList.SearchTimeSlot();
+            ret = recordList.searchTimeSlot();
             printRecordList(ret);
             delete ret;
             break;
@@ -106,9 +107,9 @@ void search() {
             std::string registration;
             std::cin >> registration;
             Record *record;
-            record = recordList.SearchRecord(registration);
+            record = recordList.searchRecord(registration);
             if(record != nullptr)
-                std::cout << *record;
+                record->Print();
             break;
         }
         case 6:
@@ -116,6 +117,7 @@ void search() {
     }
 }
 void statistics() {
+    extern DoctorMap doctorMap;
     extern RecordList recordList;
     std::cout << "what do you want to do?\n"
               << "1.today registration number\n"
@@ -130,12 +132,13 @@ void statistics() {
     }
     switch (choice) {
         case 1:
-            std::cout << "today registration:" << recordList.AllRegistration() << "\n";
+            std::cout << "today registration:" << recordList.allRegistration()<< "\n";
             break;
         case 2:
-            std::cout << "today department registration number:";
+            std::cout << "today department registration number:\n";
             for(int i=1; i<=5; i++) {
-                std::cout << "\t" << recordList.DepartmentRegistration(i) << "\n";
+                std::cout << doctorMap.departmentString(i) << ":";
+                std::cout << recordList.departmentRegistration(i) << "\n";
             }
             break;
         case 3:
@@ -147,11 +150,12 @@ void statistics() {
 }
 void change_or_delete() {
     extern RecordList recordList;
+    extern ConditionMap conditionMap;
     std::string registration;
-    std::cout << "please enter regsitration\n";
+    std::cout << "please enter registration\n";
     std::cin >> registration;
     Record *record;
-    record = recordList.SearchRecord(registration);
+    record = recordList.searchRecord(registration);
     if(record == nullptr)
         return;
     std::cout << "what do you want to do?\n"
@@ -163,51 +167,17 @@ void change_or_delete() {
         std::cin >> choice;
         if(choice>=1 && choice <=3)
             break;
-        std::cout << "erro please reenter4\n";
+        std::cout << "error please reenter4\n";
     }
     switch (choice) {
         case 1:
-            change(record);
+            record->Change();
             break;
         case 2:
-            recordList.EraseRecord(registration);
+            conditionMap.Erase(record->getCondition(), registration);
+            recordList.eraseRecord(registration);
             break;
         case 3:
             break;
     }
-}
-void change(Record *record) {
-    extern RecordList recordList;
-    std::cout << "what do you want to change?\n"
-              << "1.change doctor\n"
-              << "2.change patient\n"
-              << "3.change time\n"
-              << "4.change condition\n"
-              << "5.back";
-    int choice;
-    while(1) {
-        std::cin >> choice;
-        if(choice>=1 && choice<=5)
-            break;
-        std::cout << "error please reenter5\n";
-    }
-    switch (choice) {
-        case 1:
-            record->ChangeDoctor();
-            break;
-        case 2:
-            record->ChangePatient();
-            break;
-        case 3:
-            record->ChangeTime();
-            break;
-        case 4:
-            record->ChangeCondition(record->GetRegistration());
-            break;
-        case 5:
-            break;
-    }
-}
-void end() {
-    return;
 }

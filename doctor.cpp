@@ -2,30 +2,67 @@
 // Created by ccx on 2020/10/6.
 //
 #include "doctor.h"
-#include "my_time.h"
-#include <map>
 #include <iostream>
 #include <string>
-#include <vector>
 #include <fstream>
 #include <bitset>
-//
-
-DoctorVector doctorVector;
-std::string Doctor::GetWorkTimeString() const {
-    std::string ret;
-    for(int i=0; i<7; i++)
-        if(work_time[i]) {
-            ret += WeekString(i);
-            ret += " ";
-        }
-    return ret;
+#include <ctime>
+DoctorMap doctorMap;
+DoctorMap::Doctor::Doctor(std::string name, std::string work_time) {
+    this->name = name;
+    this->work_time = std::bitset<7>(work_time);
+    this->today_work = 0;
 }
-Doctor::Doctor(std::string name, std::bitset<7> work_time, int work_number)
-    :name(name), work_time(work_time), work_number(work_number)
-    {}
-std::string Doctor::GetDepartmentString() const {
-    int department = GetDepartment();
+
+
+DoctorMap::DoctorMap() {
+    std::ifstream f_doctor("./doctor");
+    int work_number;
+    std::string name;
+    std::string work_time;
+    while(f_doctor >> work_number >> name >> work_time)
+        doctor_map[work_number] = Doctor(name, work_time);
+    f_doctor.close();
+}
+std::string DoctorMap::getName(int work_number) const {
+    return (doctor_map.at(work_number).name);
+}
+int DoctorMap::getTodayWorkStatus(int work_number) const {
+    return doctor_map.at(work_number).today_work;
+}
+int DoctorMap::getDepartment(int work_number) const {
+    return work_number/100;
+}
+int DoctorMap::getRank(int work_number) const {
+    int t=work_number;
+    t /= 10;
+    return t%10;
+}
+bool DoctorMap::isHave(int work_number) const {
+    return doctor_map.count(work_number);
+}
+bool DoctorMap::isWork(int work_number) const {
+    if(doctor_map.at(work_number).today_work>=20)
+        return false;
+    if(doctor_map.at(work_number).work_time[getTodayWeek()] == 0)
+        return false;
+    return true;
+}
+bool DoctorMap::addWorkStatus(int work_number) {
+    doctor_map[work_number].today_work++;
+    return true;
+}
+bool DoctorMap::printDoctor(int work_number) const {
+    std::cout << "doctor:\n"
+    << "\t" << "doctor name:" << getName(work_number) << "\n"
+    << "\t" << "department:" << departmentString(getDepartment(work_number)) << "\n"
+    << "\t" << "rank:" << rankString(getRank(work_number)) << "\n"
+    << "\t" << "work number:" << work_number << "\n"
+    << "\t" << "work time:" << workTimeString(doctor_map.at(work_number).work_time) << "\n"
+    << "\t" << "today work status:" << getTodayWorkStatus(work_number) <<"\n";
+    return true;
+}
+std::string DoctorMap::departmentString(int department) const {
     std::string ret;
     if(department == SURGERY)
         ret = "surgery";
@@ -39,8 +76,7 @@ std::string Doctor::GetDepartmentString() const {
         ret = "gynecology";
     return ret;
 }
-std::string Doctor::GetRankString() const {
-    int rank = GetRank();
+std::string DoctorMap::rankString(int rank) const {
     std::string ret;
     if(rank == CHIEF_PHYSICIAN)
         ret = "chief physician";
@@ -52,128 +88,77 @@ std::string Doctor::GetRankString() const {
         ret = "resident physician";
     return ret;
 }
-int Doctor::GetRank() const {
-    int t=work_number;
-    t /= 10;
-    return t%10;
+std::string DoctorMap::workTimeString(std::bitset<7> work_time) const {
+    std::string ret;
+    for(int i=0; i<7; i++)
+        if(work_time[i]) {
+            ret += weekString(i);
+            ret += " ";
+        }
+    return ret;
 }
-int Doctor::GetDepartment() const {
-    return work_number/100;
+std::string DoctorMap::weekString(int week_day) const {
+    switch (week_day) {
+        case 0:
+            return std::string("Mon");
+        case 1:
+            return std::string("Tue");
+        case 2:
+            return std::string("Wed");
+        case 3:
+            return std::string("Thu");
+        case 4:
+            return std::string("Fri");
+        case 5:
+            return std::string("Sat");
+        case 6:
+            return std::string("Sun");
+    }
+    return std::string(" ");
 }
-int Doctor::GetTodayWorkStatus() const {
-    extern DoctorVector doctorVector;
-    return doctorVector.GetWorkStatus(work_number);
+int DoctorMap::selectDepartment() const {
+    std::cout << "please enter department:\n"
+              << "\t1." << departmentString(1) << "\n"
+              << "\t2." << departmentString(2) << "\n"
+              << "\t3." << departmentString(3) << "\n"
+              << "\t4." << departmentString(4) << "\n"
+              << "\t5." << departmentString(5) << "\n";
+    int choice;
+    while(1) {
+        std::cin >> choice;
+        if(choice>=1 && choice<=5)
+            break;
+        std::cout << "error please reenter";
+    }
+    return choice;
 }
-Doctor::Doctor(const Doctor &doctor) {
-    name = doctor.name;
-    work_number = doctor.work_number;
-    work_time = doctor.work_time;
-}
-std::ostream& operator << (std::ostream& os, const Doctor& doctor) {
-    os << "doctor:\n";
-    os << "\t" << "doctor name:" << doctor.name << "\n";
-    os << "\t" << "department:" << doctor.GetDepartmentString() << "\n";
-    os << "\t" << "rank:" <<doctor.GetRankString() << "\n";
-    os << "\t" << "work number:" << doctor.work_number << "\n";
-    os << "\t" << "work time:" << doctor.GetWorkTimeString() << "\n";
-    os << "\t" << "today work status:" << doctor.GetTodayWorkStatus() <<"\n";
-    return os;
-
-}
-std::istream& operator >> (std::istream& is, Doctor& doctor) {
-    std::string work_time;
-    is >> doctor.work_number >> doctor.name >> work_time;
-    doctor.work_time = std::bitset<7>(work_time);
-    return is;
-}
-bool operator == (const Doctor& doctor1, const Doctor& doctor2) {
-    return doctor1.work_number == doctor2.work_number;
-}
-bool Doctor::isWorkDay() {
-    if(GetTodayWorkStatus() > 20)
-        return false;
-    if(work_time[GetTodayWeek()] == 0)
-        return false;
+bool DoctorMap::printDepartmentDoctor(int department) const {
+    for(auto i:doctor_map)
+        if(getDepartment(i.first) == department)
+            printDoctor(i.first);
     return true;
 }
-
-//====================================
-DoctorVector::DoctorVector() {
-    Doctor doctor;
-    std::ifstream f_doctor;
-    f_doctor.open("./doctor", std::ios::in);
-    while(f_doctor >> doctor) {
-        Doctor *p;
-        p = new Doctor(doctor);
-        doctor_vector.push_back(p);
-    }
-    //map 初始化
-    for(auto i:doctor_vector)
-        work_status[i->GetWorkNumber()] = 0;
-}
-
-void DoctorVector::Print() {
-    for(auto i:doctor_vector) {
-        std::cout << *i;
-    }
-}
-void DoctorVector::add(int work_number) {
-    work_status[work_number]++;
-}
-
-int DoctorVector::GetWorkStatus(int work_number) {
-    return work_status[work_number];
-}
-int DoctorVector::selectDepartment() const {
+int DoctorMap::selectDoctor() const {
     int department;
-    std::cout << "please enter department\n";
-    printDepartment();
-    while(1) {
-        std::cin >> department;
-        if(department>=1 && department<=5)
-            break;
-        std::cout << "error please reenter department";
-    }
-    return department;
-}
-void DoctorVector::printDepartment() const {
-    std::cout
-    << "1.surgery\n"
-    << "2.internal\n"
-    << "3.pharmacy\n"
-    << "4.pediatric\n"
-    << "5.gynecology\n";
-}
-void DoctorVector::printDepartmentDoctor(int department) const {
-    for(auto i:doctor_vector)
-        if(i->GetDepartment()==department)
-            std::cout << *i;
-}
-bool DoctorVector::isHave(int work_number) {
-    for(auto i:doctor_vector)
-        if(i->GetWorkNumber()  == work_number)
-            return 1;
-    return 0;
-}
-Doctor& DoctorVector::getDoctor(int work_number) {
-    for(auto i:doctor_vector)
-        if(i->GetWorkNumber() == work_number)
-            return (*i);
-}
-Doctor& DoctorVector::Select() {
-    int department;
-    int work_number;
     department = selectDepartment();
     printDepartmentDoctor(department);
-
-    while (1) {
-    std::cout << "please enter work number";
+    std::cout << std::endl;
+    std::cout << "please enter work number\n";
+    int work_number;
+    while(1) {
         std::cin >> work_number;
-        if (
-                isHave(work_number)
-                )
+        if(isHave(work_number))
             break;
-        std::cout << "don't have this doctor";
+        std::cout << "error please reenter\n";
     }
-    return getDoctor(work_number);
-..}
+    return work_number;
+}
+int getTodayWeek() {
+    time_t timer;
+    time(&timer);
+    tm *tm_time;
+    tm_time = localtime(&timer);
+    if(tm_time->tm_wday == 0)
+        return 6;
+    return tm_time->tm_wday-1;
+}

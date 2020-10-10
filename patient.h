@@ -8,22 +8,16 @@
 #include <iostream>
 class Patient {
 public:
-    Patient(int age, std::string name);
-    Patient() = default;
-    int GetAge() const {return this->age;};
-    std::string GetName() const {return this->name;};
-    //改变
-    void ChangeName(std::string name);
-    void ChangeAge(int age);
-    //重载输入输出和 ==
-    friend std::istream& operator >> (std::istream &is, Patient &patient);
+    bool Print() const ;
+    bool Change();
+    std::string Name() const;
+    int Age() const;
     friend bool operator == (const Patient& patient1, const Patient& patient2);
 private:
+    friend class Record;
     std::string name;
     int age;
 };
-
-std::ostream& operator << (std::ostream &os, const Patient &patient);
 
 
 #endif //RE_PROJECT_PATIENT_H

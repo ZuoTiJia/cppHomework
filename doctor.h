@@ -9,47 +9,41 @@
 #include <iostream>
 #include <vector>
 #include <map>
+
 enum rank{
     CHIEF_PHYSICIAN = 1, ASSOCIATE_CHIEF_PHYSICIAN, ATTENDING_PHYSICIAN, RESIDENT_PHYSICIAN
 };// 主任医师， 副主任医师， 主治医师， 住院医师
 enum department {
     SURGERY = 1, INTERNAL, PHARMACY, PEDIATRIC, GYNECOLOGY
 };//外科，内科，药剂科，儿科，妇产科
-class Doctor{
+
+class DoctorMap {
 public:
-    Doctor(const Doctor& doctor);
-    Doctor(std::string name = " ", std::bitset<7> work_time = std::bitset<7>("0000000"), int work_number = 0);
-    int GetWorkNumber() const {return this->work_number;};
-    int GetRank() const;
-    int GetDepartment() const;
-    int GetTodayWorkStatus() const;
-    friend std::ostream& operator << (std::ostream& os, const Doctor&);
-    friend std::istream& operator >> (std::istream& is, Doctor& doctor);
-    bool isWorkDay();
-    friend bool operator == (const Doctor& doctor1, const Doctor& doctor2);
-private:
-    std::string GetDepartmentString() const;
-    std::string GetRankString() const;
-    std::string GetWorkTimeString() const;
-    const std::string GetName() const {return this->name;};
-    std::string name;
-    std::bitset<7> work_time;
-    int work_number;
-};
-class DoctorVector{
-public:
-    DoctorVector();
-    void add(int work_number);
-    void Print();
-    int GetWorkStatus(int work_number);
-    Doctor& Select();
+    DoctorMap();
+    int getRank(int work_number) const;
+    int getDepartment(int work_number) const;
+    int getTodayWorkStatus(int work_number) const;
+    std::string getName(int work_number) const;
+    bool isWork(int work_number) const;
+    bool isHave(int work_number) const;
+    bool addWorkStatus(int work_number);
+    bool printDoctor(int work_number) const;
+    int selectDoctor() const;
     int selectDepartment() const;
-    Doctor& getDoctor(int work_number);
+    std::string departmentString(int department) const;
 private:
-    bool isHave(int work_number);
-    void printDepartment() const;
-    void printDepartmentDoctor(int department) const;
-    std::map<int, int> work_status;
-    std::vector<Doctor *> doctor_vector;
+    struct Doctor {
+        Doctor() = default;
+        Doctor(std::string name, std::string work_time);
+        std::string name;
+        std::bitset<7> work_time;
+        int today_work;
+    };
+    std::string rankString(int rank) const;
+    std::string workTimeString(std::bitset<7>) const;
+    std::string weekString(int week_day) const;
+    bool printDepartmentDoctor(int department) const;
+    std::map<int, DoctorMap::Doctor> doctor_map;
 };
+int getTodayWeek();
 #endif //RE_PROJECT_DOCTOR_H
